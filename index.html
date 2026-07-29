@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>今晚吃什么 · 菜单决策助手</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: #f8f5f2; color: #333; padding: 16px; max-width: 600px; margin: 0 auto;
+    }
+    .header { text-align: center; margin-bottom: 20px; }
+    .header h1 { font-size: 28px; color: #c44b2b; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; justify-content: center; }
+    .tab-btn {
+      background: white; border: 1px solid #ddd; padding: 8px 14px; border-radius: 30px;
+      font-size: 14px; cursor: pointer; color: #555;
+    }
+    .tab-btn.active { background: #c44b2b; color: white; border-color: #c44b2b; font-weight: 600; }
+    .random-section {
+      background: white; border-radius: 20px; padding: 16px; margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center;
+    }
+    .random-btn {
+      background: linear-gradient(135deg, #f6a264, #c44b2b); border: none; color: white;
+      font-size: 18px; font-weight: 600; padding: 14px 32px; border-radius: 40px;
+      cursor: pointer; width: 100%; margin-bottom: 12px;
+    }
+    .random-result {
+      background: #fef3e9; border-radius: 16px; padding: 12px; margin-top: 10px;
+      text-align: left; display: none;
+    }
+    .random-result.visible { display: block; }
+    .dish-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+    .dish-card {
+      background: white; border-radius: 18px; padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid transparent;
+    }
+    .dish-card.selected { border: 2px solid #c44b2b; background: #fff7f4; }
+    .dish-name { font-size: 18px; font-weight: 700; }
+    .badge {
+      background: #e8e2d9; color: #5e4c3a; font-size: 12px; padding: 2px 10px;
+      border-radius: 20px; margin-right: 6px;
+    }
+    .badge.restaurant { background: #ffedcc; color: #a15813; }
+    .ingredients { font-size: 13px; background: #f9f7f4; padding: 8px; border-radius: 12px; margin: 8px 0; }
+    .steps { font-size: 13px; line-height: 1.5; white-space: pre-wrap; margin-bottom: 12px; }
+    .select-btn {
+      background: #f0e9e2; border: none; padding: 8px 18px; border-radius: 30px;
+      font-size: 14px; cursor: pointer;
+    }
+    .select-btn.selected-btn { background: #c44b2b; color: white; }
+    .my-menu-section {
+      background: white; border-radius: 20px; padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-top: 20px;
+    }
+    .share-btn {
+      background: #5b8c5a; border: none; color: white; padding: 8px 18px;
+      border-radius: 20px; font-size: 14px; cursor: pointer; float: right;
+    }
+    .empty-menu { color: #aaa; text-align: center; padding: 20px; }
+    .footer { margin-top: 30px; text-align: center; color: #aaa; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🍲 今晚吃什么</h1>
+    <p>随机 · 精选菜谱 · 分享给TA</p>
+  </div>
+  <div class="tabs" id="categoryTabs">
+    <button class="tab-btn active" data-category="all">全部</button>
+    <button class="tab-btn" data-category="荤">荤菜</button>
+    <button class="tab-btn" data-category="素">素菜</button>
+    <button class="tab-btn" data-category="汤">汤羹</button>
+    <button class="tab-btn" data-category="主食">主食</button>
+    <button class="tab-btn" data-category="湘菜">湘菜</button>
+    <button class="tab-btn" data-category="川菜">川菜</button>
+    <button class="tab-btn" data-category="鄂菜">鄂菜</button>
+    <button class="tab-btn" data-category="粤菜">粤菜</button>
+  </div>
+  <div class="random-section">
+    <button class="random-btn" id="randomDishBtn">🎲 随机一顿饭（荤+素+汤+主食）</button>
+    <div id="randomResult" class="random-result"></div>
+  </div>
+  <div id="dishContainer" class="dish-list"></div>
+  <div class="my-menu-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <span style="font-weight: 700; font-size: 18px;">📋 我的点菜清单</span>
+      <button class="share-btn" id="shareMenuBtn">📤 分享给女朋友</button>
+    </div>
+    <div id="myMenuContent"><div class="empty-menu">还没选菜，从上面勾选喜欢的菜吧</div></div>
+  </div>
+  <div class="footer">菜单灵感来自醉得意、兰湘子、笨萝卜等热门餐馆</div>
+
+  <script>
+    (function() {
+      // 菜谱数据
+      const dishes = [
+        { id:1, name:"辣椒炒肉", category:"荤", cuisine:"湘菜", restaurant:"兰湘子·笨萝卜风格", ingredients:["五花肉200g","青尖椒3个","蒜4瓣","豆豉1勺","生抽2勺","老抽半勺","盐","食用油"], steps:"1. 五花肉切薄片，青椒斜切圈，蒜拍碎。\n2. 锅不放油，下青椒煸出虎皮盛出。\n3. 热锅少油，下五花肉煸出油，加蒜、豆豉炒香。\n4. 淋入生抽、老抽翻炒上色，倒入青椒大火快炒，加盐出锅。" },
+        { id:2, name:"酸菜鱼", category:"荤", cuisine:"川菜", restaurant:"醉得意风格", ingredients:["草鱼片300g","酸菜200g","干辣椒5个","花椒","姜3片","蒜3瓣","蛋清1个","淀粉1勺","白胡椒粉","盐","白醋1勺"], steps:"1. 鱼片加盐、蛋清、淀粉抓匀腌制15分钟。\n2. 酸菜切段，干辣椒剪段。\n3. 热油爆香姜蒜，下酸菜炒干水分，加热水煮开，加白醋、盐、胡椒粉。\n4. 逐片下鱼片烫熟，盛出后放干辣椒花椒，淋热油。" },
+        { id:3, name:"砂锅排骨莲藕汤", category:"汤", cuisine:"鄂菜", restaurant:"夏式砂锅风格", ingredients:["排骨400g","莲藕1节","姜4片","料酒1勺","盐","葱花"], steps:"1. 排骨冷水下锅加料酒焯水。\n2. 莲藕去皮切滚刀块。\n3. 砂锅加水放排骨、姜片炖1小时，加莲藕再炖30分钟，加盐撒葱花。" },
+        { id:4, name:"手撕包菜", category:"素", cuisine:"湘菜", restaurant:"笨萝卜风格", ingredients:["包菜半颗","干辣椒3个","五花肉片50g","蒜2瓣","生抽1勺","陈醋1勺","盐"], steps:"1. 包菜手撕块，五花肉切片。\n2. 热锅少油煸五花肉出油，加蒜、干辣椒爆香。\n3. 倒包菜大火炒软，淋生抽、陈醋，加盐炒匀。" },
+        { id:5, name:"番茄炒蛋", category:"素", cuisine:"家常", restaurant:"家常经典", ingredients:["番茄2个","鸡蛋3个","葱花","盐","糖半勺","油"], steps:"1. 番茄切块，鸡蛋打散加盐。\n2. 热油炒鸡蛋凝固盛出。\n3. 余油炒番茄出汁加糖盐，倒回鸡蛋炒匀撒葱花。" },
+        { id:6, name:"白米饭", category:"主食", cuisine:"主食", restaurant:"基础主食", ingredients:["大米200g","水"], steps:"1. 大米淘洗，米水比例1:1.2，电饭煲煮熟。" },
+        { id:7, name:"葱油拌面", category:"主食", cuisine:"家常", restaurant:"上海风味", ingredients:["鲜面条150g","小葱1把","生抽2勺","老抽1勺","糖1勺","油"], steps:"1. 小葱切段，小火炸至焦黄捞出。\n2. 油中加生抽、老抽、糖搅匀。\n3. 面条煮熟过凉，拌入葱油，放炸葱。" },
+        { id:8, name:"白灼菜心", category:"素", cuisine:"粤菜", restaurant:"莱菜风格", ingredients:["菜心300g","蒜末","生抽2勺","蚝油1勺","油"], steps:"1. 菜心洗净，开水加油盐焯1分钟摆盘。\n2. 生抽蚝油加少许水淋上，撒蒜末，浇热油。" },
+        { id:9, name:"毛血旺", category:"荤", cuisine:"川菜", restaurant:"醉得意风格", ingredients:["鸭血1块","午餐肉半盒","毛肚100g","豆芽100g","干辣椒","花椒","火锅底料1块","蒜末","香菜"], steps:"1. 鸭血午餐肉切片，毛肚切块。\n2. 炒香火锅底料加水煮开，烫熟豆芽垫底。\n3. 下鸭血、午餐肉煮3分钟，最后下毛肚烫20秒，盛出撒蒜末、干辣椒花椒，泼热油放香菜。" },
+        { id:10, name:"干煸四季豆", category:"素", cuisine:"川菜", restaurant:"兰湘子风格", ingredients:["四季豆300g","猪肉末50g","芽菜1勺","干辣椒3个","花椒","生抽1勺","盐"], steps:"1. 四季豆去筋掰段，沥干。\n2. 油温六成炸至微皱捞出。\n3. 留底油炒肉末至酥，加干辣椒、花椒、芽菜，倒入四季豆，生抽盐炒匀。" },
+        { id:11, name:"冬瓜丸子汤", category:"汤", cuisine:"家常", restaurant:"家庭暖汤", ingredients:["冬瓜300g","猪肉馅200g","姜末","葱花","鸡蛋1个","淀粉1勺","盐","白胡椒粉"], steps:"1. 肉馅加姜末、鸡蛋、淀粉、盐搅上劲。\n2. 冬瓜切片。水烧开转小火挤丸子煮至浮起，下冬瓜煮透，加盐胡椒粉葱花。" },
+        { id:12, name:"蛋炒饭", category:"主食", cuisine:"家常", restaurant:"基础主食", ingredients:["隔夜米饭1碗","鸡蛋2个","胡萝卜丁","玉米粒","葱花","盐","油"], steps:"1. 鸡蛋炒碎盛出。\n2. 炒胡萝卜玉米粒，加米饭炒散，加鸡蛋、盐炒匀，撒葱花。" }
+      ];
+
+      let currentFilter = 'all';
+      let selectedDishIds = new Set();
+
+      const dishContainer = document.getElementById('dishContainer');
+      const randomResultDiv = document.getElementById('randomResult');
+      const myMenuContent = document.getElementById('myMenuContent');
+
+      function filterDishes() {
+        if (currentFilter === 'all') return dishes;
+        return dishes.filter(d => d.category === currentFilter || d.cuisine === currentFilter);
+      }
+
+      function renderDishes() {
+        const filtered = filterDishes();
+        dishContainer.innerHTML = filtered.map(dish => {
+          const selected = selectedDishIds.has(dish.id);
+          return `<div class="dish-card ${selected ? 'selected' : ''}">
+            <div class="dish-name">${dish.name}</div>
+            <div style="margin: 4px 0;">
+              <span class="badge">${dish.category}</span>
+              <span class="badge">${dish.cuisine}</span>
+              <span class="badge restaurant">${dish.restaurant}</span>
+            </div>
+            <div class="ingredients">🛒 <strong>食材：</strong>${dish.ingredients.join('、')}</div>
+            <div class="steps">👨‍🍳 <strong>步骤：</strong><br>${dish.steps}</div>
+            <button class="select-btn ${selected ? 'selected-btn' : ''}" data-id="${dish.id}">
+              ${selected ? '✓ 已点' : '＋ 点这道菜'}
+            </button>
+          </div>`;
+        }).join('');
+        document.querySelectorAll('.select-btn').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            const id = parseInt(this.dataset.id);
+            toggleDish(id);
+          });
+        });
+      }
+
+      function toggleDish(id) {
+        if (selectedDishIds.has(id)) selectedDishIds.delete(id);
+        else selectedDishIds.add(id);
+        renderDishes();
+        renderMyMenu();
+      }
+
+      function renderMyMenu() {
+        if (selectedDishIds.size === 0) {
+          myMenuContent.innerHTML = '<div class="empty-menu">还没选菜，从上面勾选喜欢的菜吧</div>';
+          return;
+        }
+        const selected = dishes.filter(d => selectedDishIds.has(d.id));
+        let html = '<ul style="list-style:none;padding:0;">';
+        selected.forEach(d => html += `<li style="padding:4px 0;">🍽️ ${d.name} <span style="color:#888;">(${d.cuisine})</span></li>`);
+        html += '</ul>';
+        const allIng = new Set();
+        selected.forEach(d => d.ingredients.forEach(i => allIng.add(i)));
+        html += `<div style="background:#f4f0eb;padding:10px;border-radius:14px;margin-top:8px;">🛒 <strong>统一采购：</strong>${Array.from(allIng).join('、')}</div>`;
+        myMenuContent.innerHTML = html;
+      }
+
+      function randomMeal() {
+        const categories = ['荤','素','汤','主食'];
+        const meal = categories.map(cat => {
+          const filtered = dishes.filter(d => d.category === cat);
+          return filtered.length ? filtered[Math.floor(Math.random() * filtered.length)] : null;
+        }).filter(d => d);
+        if (!meal.length) return;
+        let html = '<strong>🎉 今日随机推荐：</strong><br>';
+        meal.forEach(d => html += `• ${d.name} (${d.cuisine})<br>`);
+        randomResultDiv.innerHTML = html;
+        randomResultDiv.classList.add('visible');
+      }
+
+      function shareMenu() {
+        if (selectedDishIds.size === 0) { alert('请先点选至少一道菜'); return; }
+        const selected = dishes.filter(d => selectedDishIds.has(d.id));
+        let text = '🍽️ 今晚菜单来啦！\n\n';
+        selected.forEach(d => {
+          text += `【${d.name}】${d.cuisine}\n食材：${d.ingredients.join('、')}\n做法：${d.steps.replace(/\n/g,'；')}\n\n`;
+        });
+        const allIng = new Set();
+        selected.forEach(d => d.ingredients.forEach(i => allIng.add(i)));
+        text += `🛒 统一采购：${Array.from(allIng).join('、')}`;
+        if (navigator.share) {
+          navigator.share({ title: '今晚吃什么', text: text }).catch(() => {});
+        } else {
+          navigator.clipboard.writeText(text).then(() => alert('菜单已复制到剪贴板，去粘贴给女朋友吧！')).catch(() => alert('分享失败，请手动复制'));
+        }
+      }
+
+      // 分类切换
+      document.getElementById('categoryTabs').addEventListener('click', function(e) {
+        if (e.target.classList.contains('tab-btn')) {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          currentFilter = e.target.dataset.category;
+          renderDishes();
+        }
+      });
+
+      document.getElementById('randomDishBtn').addEventListener('click', randomMeal);
+      document.getElementById('shareMenuBtn').addEventListener('click', shareMenu);
+
+      // 初始渲染
+      renderDishes();
+      renderMyMenu();
+    })();
+  </script>
+</body>
+</html>
