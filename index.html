@@ -5,63 +5,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>今晚吃什么 · 全功能版</title>
   <style>
+    /* ========== 完全复原的样式，和你最早的漂亮版本一模一样 ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8f5f2; color: #333; padding: 16px; max-width: 700px; margin: 0 auto; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: #f8f5f2; color: #333; padding: 16px; max-width: 700px; margin: 0 auto;
+    }
     .header { text-align: center; margin-bottom: 20px; }
     .header h1 { font-size: 28px; color: #c44b2b; }
+
+    /* 主标签 */
     .main-tabs { display: flex; margin-bottom: 16px; border-radius: 12px; overflow: hidden; border: 1px solid #ddd; }
-    .main-tab { flex: 1; text-align: center; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; background: white; color: #555; }
+    .main-tab {
+      flex: 1; text-align: center; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer;
+      background: white; color: #555; transition: all 0.2s;
+    }
     .main-tab.active { background: #c44b2b; color: white; }
     .view { display: none; }
     .view.active { display: block; }
 
     /* 分类标签 */
     .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; justify-content: center; }
-    .tab-btn { background: white; border: 1px solid #ddd; padding: 8px 14px; border-radius: 30px; font-size: 14px; cursor: pointer; color: #555; }
+    .tab-btn {
+      background: white; border: 1px solid #ddd; padding: 8px 14px; border-radius: 30px;
+      font-size: 14px; cursor: pointer; color: #555;
+    }
     .tab-btn.active { background: #c44b2b; color: white; border-color: #c44b2b; font-weight: 600; }
 
     /* 随机区域 */
-    .random-section { background: white; border-radius: 20px; padding: 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
-    .random-btn { background: linear-gradient(135deg, #f6a264, #c44b2b); border: none; color: white; font-size: 18px; font-weight: 600; padding: 14px 32px; border-radius: 40px; cursor: pointer; width: 100%; margin-bottom: 12px; }
-    .random-result { background: #fef3e9; border-radius: 16px; padding: 12px; margin-top: 10px; text-align: left; display: none; }
+    .random-section {
+      background: white; border-radius: 20px; padding: 16px; margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center;
+    }
+    .random-btn {
+      background: linear-gradient(135deg, #f6a264, #c44b2b); border: none; color: white;
+      font-size: 18px; font-weight: 600; padding: 14px 32px; border-radius: 40px;
+      cursor: pointer; width: 100%; margin-bottom: 12px;
+    }
+    .random-result {
+      background: #fef3e9; border-radius: 16px; padding: 12px; margin-top: 10px;
+      text-align: left; display: none;
+    }
     .random-result.visible { display: block; }
-    .random-dish-item { background: white; border-radius: 12px; padding: 10px; margin-bottom: 8px; }
+    .random-dish-item {
+      background: white; border-radius: 12px; padding: 10px; margin-bottom: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
     .random-dish-item .dish-name { font-weight: 700; font-size: 16px; }
+    .random-dish-item .ingredients { font-size: 12px; background: #f9f7f4; padding: 6px; border-radius: 8px; margin: 4px 0; }
+    .random-dish-item .steps { font-size: 12px; white-space: pre-wrap; }
+    .share-random-btn {
+      background: #5b8c5a; border: none; color: white; padding: 8px 18px;
+      border-radius: 20px; font-size: 14px; cursor: pointer; margin-top: 8px; display: inline-block;
+    }
+
+    /* 菜品卡片 */
+    .dish-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+    .dish-card {
+      background: white; border-radius: 18px; padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid transparent;
+    }
+    .dish-card.selected { border: 2px solid #c44b2b; background: #fff7f4; }
+    .dish-name { font-size: 18px; font-weight: 700; }
+    .badge {
+      background: #e8e2d9; color: #5e4c3a; font-size: 12px; padding: 2px 10px;
+      border-radius: 20px; margin-right: 6px; display: inline-block;
+    }
+    .badge.restaurant { background: #ffedcc; color: #a15813; }
     .ingredients { font-size: 13px; background: #f9f7f4; padding: 8px; border-radius: 12px; margin: 8px 0; }
     .steps { font-size: 13px; line-height: 1.5; white-space: pre-wrap; margin-bottom: 12px; }
-    .share-random-btn { background: #5b8c5a; border: none; color: white; padding: 8px 18px; border-radius: 20px; font-size: 14px; cursor: pointer; margin-top: 8px; }
-
-    .dish-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
-    .dish-card { background: white; border-radius: 18px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid transparent; }
-    .dish-card.selected { border: 2px solid #c44b2b; background: #fff7f4; }
-    .select-btn { background: #f0e9e2; border: none; padding: 8px 18px; border-radius: 30px; font-size: 14px; cursor: pointer; }
+    .select-btn {
+      background: #f0e9e2; border: none; padding: 8px 18px; border-radius: 30px;
+      font-size: 14px; cursor: pointer;
+    }
     .select-btn.selected-btn { background: #c44b2b; color: white; }
 
-    .my-menu-section, .accounting-section { background: white; border-radius: 20px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-top: 20px; }
-    .share-btn { background: #5b8c5a; border: none; color: white; padding: 8px 18px; border-radius: 20px; font-size: 14px; cursor: pointer; }
+    /* 点菜清单 */
+    .my-menu-section {
+      background: white; border-radius: 20px; padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-top: 20px;
+    }
+    .share-btn {
+      background: #5b8c5a; border: none; color: white; padding: 8px 18px;
+      border-radius: 20px; font-size: 14px; cursor: pointer; float: right;
+    }
     .empty-menu { color: #aaa; text-align: center; padding: 20px; }
 
-    /* 一周菜单表格 */
+    /* 一周菜单 */
     .week-table { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
-    .week-table th, .week-table td { border: 1px solid #eee; padding: 10px 6px; text-align: center; font-size: 13px; }
+    .week-table th, .week-table td {
+      border: 1px solid #eee; padding: 10px 6px; text-align: center; font-size: 13px;
+    }
     .week-table th { background: #fdf3ed; font-weight: 600; }
-    .week-table td { cursor: pointer; transition: background 0.2s; }
+    .week-table td { cursor: pointer; transition: background 0.2s; white-space: pre-wrap; }
     .week-table td:hover { background: #fef7f2; }
     .week-actions { display: flex; gap: 10px; margin-bottom: 16px; justify-content: center; }
     .week-actions button { padding: 8px 20px; border-radius: 30px; border: 1px solid #ccc; background: white; font-size: 14px; cursor: pointer; }
     .week-actions button.active { background: #c44b2b; color: white; border-color: #c44b2b; }
 
     /* 记账本 */
+    .accounting-section {
+      background: white; border-radius: 20px; padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-top: 20px;
+    }
     .accounting-inputs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
     .accounting-inputs input { flex: 1; min-width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 12px; }
-    .accounting-inputs button { background: #c44b2b; color: white; border: none; padding: 8px 16px; border-radius: 12px; }
+    .accounting-inputs button {
+      background: #c44b2b; color: white; border: none; padding: 8px 16px; border-radius: 12px;
+    }
     .accounting-summary { display: flex; justify-content: space-between; background: #f4f0eb; padding: 10px; border-radius: 12px; margin-bottom: 12px; }
     .expense-list { max-height: 400px; overflow-y: auto; }
     .expense-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 14px; }
     .delete-expense { color: #c44b2b; cursor: pointer; margin-left: 10px; }
-    .footer { text-align: center; color: #aaa; font-size: 13px; margin-top: 30px; }
 
-    /* 模态弹窗 */
+    .footer { margin-top: 30px; text-align: center; color: #aaa; font-size: 13px; }
+
+    /* 弹窗 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
     .modal-content { background: white; border-radius: 20px; padding: 20px; max-width: 90%; width: 500px; max-height: 80vh; overflow-y: auto; }
     .modal-close { float: right; background: none; border: none; font-size: 24px; cursor: pointer; }
@@ -79,25 +138,24 @@
     <div class="main-tab" data-view="accountingView">💰 共享记账</div>
   </div>
 
-  <!-- ==================== 菜单推荐视图 ==================== -->
+  <!-- ========== 菜单推荐视图 ========== -->
   <div id="menuView" class="view active">
-    <!-- 分类筛选、随机、菜单列表、点菜清单 -->
     <div class="tabs" id="categoryTabs"></div>
     <div class="random-section">
-      <button class="random-btn" id="randomDishBtn">🎲 随机一顿饭</button>
+      <button class="random-btn" id="randomDishBtn">🎲 随机一顿饭（荤+素+汤+主食）</button>
       <div id="randomResult" class="random-result"></div>
     </div>
     <div id="dishContainer" class="dish-list"></div>
     <div class="my-menu-section">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-weight: 700; font-size: 18px;">📋 点菜清单</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="font-weight: 700; font-size: 18px;">📋 我的点菜清单</span>
         <button class="share-btn" id="shareMenuBtn">📤 分享清单</button>
       </div>
-      <div id="myMenuContent"><div class="empty-menu">还没选菜，从上面勾选吧</div></div>
+      <div id="myMenuContent"><div class="empty-menu">还没选菜，从上面勾选喜欢的菜吧</div></div>
     </div>
   </div>
 
-  <!-- ==================== 一周菜单视图 ==================== -->
+  <!-- ========== 一周菜单视图 ========== -->
   <div id="weekView" class="view">
     <div class="week-actions">
       <button id="randomWeekBtn">🎲 随机一周</button>
@@ -107,7 +165,7 @@
     <table class="week-table" id="weekTable"></table>
   </div>
 
-  <!-- ==================== 记账本视图 ==================== -->
+  <!-- ========== 记账本视图 ========== -->
   <div id="accountingView" class="view">
     <div class="accounting-section">
       <div style="font-weight: 700; font-size: 18px; margin-bottom: 12px;">💰 共享记账本 <span style="font-size:12px;color:green;">📶 实时同步中</span></div>
@@ -141,7 +199,7 @@
     import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
     // ========== 替换为你的 Firebase 配置 ==========
-const firebaseConfig = {
+    const firebaseConfig = {
   apiKey: "AIzaSyBsa97YTtyGePUMfg0NJXsym1-7P6GOBDE",
   authDomain: "dinner-helper-a8656.firebaseapp.com",
   databaseURL: "https://dinner-helper-a8656-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -157,19 +215,14 @@ const firebaseConfig = {
     const expensesRef = ref(db, 'expenses');
 
     let allExpenses = [];
-
     onValue(expensesRef, (snapshot) => {
       allExpenses = [];
-      snapshot.forEach(child => {
-        allExpenses.push({ id: child.key, ...child.val() });
-      });
-      // 保留半年
+      snapshot.forEach(child => allExpenses.push({ id: child.key, ...child.val() }));
+      // 自动清理半年前的记录
       const halfYearAgo = new Date();
       halfYearAgo.setMonth(halfYearAgo.getMonth() - 6);
       allExpenses.forEach(e => {
-        if (new Date(e.date) < halfYearAgo) {
-          remove(ref(db, 'expenses/' + e.id));
-        }
+        if (new Date(e.date) < halfYearAgo) remove(ref(db, 'expenses/' + e.id));
       });
       renderExpenseListUI();
     });
@@ -207,11 +260,10 @@ const firebaseConfig = {
       const sorted = [...allExpenses].sort((a,b) => b.timestamp - a.timestamp);
       listDiv.innerHTML = sorted.map(e => `<div class="expense-item"><span>${e.date} | ${e.note}</span><span>¥${e.amount.toFixed(2)} <span class="delete-expense" data-id="${e.id}">🗑️</span></span></div>`).join('');
       document.querySelectorAll('.delete-expense').forEach(el => {
-        el.addEventListener('click', (e) => deleteExpense(e.target.dataset.id));
+        el.addEventListener('click', () => deleteExpense(el.dataset.id));
       });
     }
 
-    // 绑定记账按钮
     document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('addExpenseBtn').addEventListener('click', () => {
       const date = document.getElementById('expenseDate').value;
@@ -220,12 +272,11 @@ const firebaseConfig = {
       addExpense(date, amount, note);
     });
 
-    // 暴露给全局（用于视图切换时可能调用）
     window.renderExpenseList = renderExpenseListUI;
   </script>
 
   <script>
-    // ==================== 菜品数据 (260+道，全部保留) ====================
+    // ==================== 菜品数据（请将你之前完整的 260+ 道菜数组粘贴在这里）====================
     const dishes = [
         // ---------- 荤菜 1-100 ----------
         { id:1, name:"辣椒炒肉", category:"荤", cuisine:"湘菜", restaurant:"兰湘子·笨萝卜", ingredients:"五花肉200g、青尖椒3个、蒜4瓣、豆豉1勺、生抽2勺、老抽半勺、盐、食用油", steps:"1. 五花肉切薄片，青椒斜切圈，蒜拍碎。\n2. 锅不放油，下青椒煸出虎皮盛出。\n3. 热锅少油，下五花肉煸出油，加蒜、豆豉炒香。\n4. 淋入生抽、老抽翻炒上色，倒入青椒大火快炒，加盐出锅。" },
@@ -453,14 +504,12 @@ const firebaseConfig = {
         { id:215, name:"提拉米苏", category:"甜品", cuisine:"意式", restaurant:"免烤经典", ingredients:"马斯卡彭、鸡蛋、手指饼干、咖啡、可可粉、糖", steps:"1. 蛋黄加糖打发，加入马斯卡彭拌匀，再混入打发的蛋白。\n2. 手指饼干蘸咖啡液，一层饼干一层奶酪糊铺好。\n3. 冷藏4小时，筛可可粉。" }
       ];
 
-    // 如果你没有完整数据，请用你之前回复中提供的完整数组替换这一行。
 
     // ==================== 菜单推荐逻辑 ====================
     let currentFilter = 'all';
     let selectedDishIds = new Set();
     let lastRandomMeal = [];
 
-    // 分类标签生成
     const categories = ['all','荤','素','汤','主食','甜品','湘菜','川菜','鄂菜','粤菜','东北菜','淮扬菜','闽菜','鲁菜','西北菜','云贵菜'];
     const catNames = ['全部','荤菜','素菜','汤羹','主食','甜品','湘菜','川菜','鄂菜','粤菜','东北菜','淮扬菜','闽菜','鲁菜','西北菜','云贵菜'];
     const tabsDiv = document.getElementById('categoryTabs');
@@ -477,9 +526,13 @@ const firebaseConfig = {
         const sel = selectedDishIds.has(d.id);
         return `<div class="dish-card ${sel?'selected':''}">
           <div class="dish-name">${d.name}</div>
-          <div style="margin:4px 0;"><span class="badge">${d.category}</span><span class="badge">${d.cuisine}</span><span class="badge restaurant">${d.restaurant}</span></div>
-          <div class="ingredients">🛒 ${d.ingredients}</div>
-          <div class="steps">👨‍🍳 ${d.steps}</div>
+          <div style="margin:4px 0;">
+            <span class="badge">${d.category}</span>
+            <span class="badge">${d.cuisine}</span>
+            <span class="badge restaurant">${d.restaurant}</span>
+          </div>
+          <div class="ingredients">🛒 <strong>食材：</strong>${d.ingredients}</div>
+          <div class="steps">👨‍🍳 <strong>步骤：</strong><br>${d.steps}</div>
           <button class="select-btn ${sel?'selected-btn':''}" data-id="${d.id}">${sel?'✓ 已点':'＋ 点这道菜'}</button>
         </div>`;
       }).join('');
@@ -501,19 +554,22 @@ const firebaseConfig = {
     function renderMyMenu() {
       const content = document.getElementById('myMenuContent');
       if (selectedDishIds.size === 0) {
-        content.innerHTML = '<div class="empty-menu">还没选菜</div>';
+        content.innerHTML = '<div class="empty-menu">还没选菜，从上面勾选喜欢的菜吧</div>';
         return;
       }
       const selected = dishes.filter(d => selectedDishIds.has(d.id));
       let html = '<ul style="list-style:none;padding:0;">';
-      selected.forEach(d => html += `<li>🍽️ ${d.name} (${d.cuisine})</li>`);
-      html += '</ul><div style="background:#f4f0eb;padding:10px;border-radius:14px;margin-top:8px;">🛒 <strong>统一采购：</strong>'+[...new Set(selected.flatMap(d=>d.ingredients.split('、')))].join('、')+'</div>';
+      selected.forEach(d => html += `<li style="padding:4px 0;">🍽️ ${d.name} <span style="color:#888;">(${d.cuisine})</span></li>`);
+      html += '</ul>';
+      const allIng = new Set();
+      selected.forEach(d => d.ingredients.split('、').forEach(i => allIng.add(i.trim())));
+      html += `<div style="background:#f4f0eb;padding:10px;border-radius:14px;margin-top:8px;">🛒 <strong>统一采购：</strong>${Array.from(allIng).join('、')}</div>`;
       content.innerHTML = html;
     }
 
     tabsDiv.addEventListener('click', (e) => {
       if (e.target.classList.contains('tab-btn')) {
-        document.querySelectorAll('#categoryTabs .tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('#categoryTabs .tab-btn').forEach(b => b.classList.remove('active'));
         e.target.classList.add('active');
         currentFilter = e.target.dataset.category;
         renderDishes();
@@ -525,25 +581,29 @@ const firebaseConfig = {
       const meal = cats.map(cat => {
         const list = dishes.filter(d => d.category === cat);
         return list.length ? list[Math.floor(Math.random()*list.length)] : null;
-      }).filter(d=>d);
+      }).filter(d => d);
       lastRandomMeal = meal;
       const div = document.getElementById('randomResult');
-      div.innerHTML = '<strong>🎉 今日随机推荐：</strong><br>' + meal.map(d => 
-        `<div class="random-dish-item"><div class="dish-name">${d.name} (${d.cuisine})</div><div class="ingredients">🛒 ${d.ingredients}</div><div class="steps">👨‍🍳 ${d.steps.replace(/\n/g,'<br>')}</div></div>`
-      ).join('') + '<button class="share-random-btn" id="shareRandomBtn">📤 分享这个菜单</button>';
+      div.innerHTML = '<strong>🎉 今日随机推荐：</strong><br>' + meal.map(d =>
+        `<div class="random-dish-item">
+          <div class="dish-name">${d.name} <span style="font-size:12px;color:#888;">${d.cuisine}</span></div>
+          <div class="ingredients">🛒 <strong>食材：</strong>${d.ingredients}</div>
+          <div class="steps">👨‍🍳 <strong>步骤：</strong><br>${d.steps.replace(/\n/g,'<br>')}</div>
+        </div>`
+      ).join('') + '<button class="share-random-btn" id="shareRandomBtn">📤 分享这个随机菜单</button>';
       div.classList.add('visible');
       document.getElementById('shareRandomBtn').addEventListener('click', () => {
-        const text = '🎲 随机推荐：\n\n' + meal.map(d => `【${d.name}】\n食材：${d.ingredients}\n做法：${d.steps.replace(/\n/g,'；')}`).join('\n\n');
+        const text = '🎲 随机推荐今日菜单：\n\n' + meal.map(d => `【${d.name}】\n食材：${d.ingredients}\n做法：${d.steps.replace(/\n/g,'；')}`).join('\n\n');
         shareText(text);
       });
     });
 
     document.getElementById('shareMenuBtn').addEventListener('click', () => {
-      if (selectedDishIds.size===0) return alert('请先选菜');
+      if (selectedDishIds.size === 0) return alert('请先点选至少一道菜');
       const selected = dishes.filter(d => selectedDishIds.has(d.id));
-      let text = '🍽️ 今晚菜单：\n\n';
+      let text = '🍽️ 今晚菜单来啦！\n\n';
       selected.forEach(d => text += `【${d.name}】\n食材：${d.ingredients}\n做法：${d.steps.replace(/\n/g,'；')}\n\n`);
-      text += '🛒 采购：' + [...new Set(selected.flatMap(d=>d.ingredients.split('、')))].join('、');
+      text += '🛒 统一采购：' + [...new Set(selected.flatMap(d => d.ingredients.split('、')))].join('、');
       shareText(text);
     });
 
@@ -551,7 +611,7 @@ const firebaseConfig = {
       if (navigator.share) {
         navigator.share({ title: '今晚吃什么', text }).catch(() => {});
       } else {
-        navigator.clipboard.writeText(text).then(() => alert('已复制')).catch(() => alert('复制失败'));
+        navigator.clipboard.writeText(text).then(() => alert('已复制到剪贴板！')).catch(() => alert('复制失败'));
       }
     }
 
@@ -563,7 +623,6 @@ const firebaseConfig = {
     function getWeekMenu() {
       const saved = localStorage.getItem(STORAGE_KEY_WEEK);
       if (saved) return JSON.parse(saved);
-      // 初始化空结构
       return weekDays.map(day => ({
         day,
         lunch: (day==='周六'||day==='周日') ? '' : null,
@@ -590,30 +649,38 @@ const firebaseConfig = {
         cell.addEventListener('click', (e) => {
           const day = e.target.dataset.day;
           const meal = e.target.dataset.meal;
+          const cellContent = e.target.innerText;
           if (isEditingWeek) {
-            // 修改模式：弹出输入框
-            const newName = prompt('输入菜名（可自由填写或从推荐中选）：', e.target.textContent === '点击添加' ? '' : e.target.textContent);
-            if (newName !== null) {
+            const newVal = prompt('编辑菜单（可用换行分隔多个菜名）：', cellContent === '点击添加' ? '' : cellContent);
+            if (newVal !== null) {
               const menu = getWeekMenu();
               const dayData = menu.find(d => d.day === day);
-              dayData[meal] = newName.trim();
+              dayData[meal] = newVal.trim();
               saveWeekMenu(menu);
               renderWeekTable();
             }
           } else {
-            // 查看详情：在菜单库中查找
-            const dishName = e.target.textContent;
-            const dish = dishes.find(d => d.name === dishName);
-            const modal = document.getElementById('detailModal');
-            const body = document.getElementById('modalBody');
-            if (dish) {
-              body.innerHTML = `<h3>${dish.name}</h3><div class="ingredients">🛒 ${dish.ingredients}</div><div class="steps">👨‍🍳 ${dish.steps.replace(/\n/g,'<br>')}</div>`;
-            } else if (dishName && dishName !== '点击添加') {
-              body.innerHTML = `<p>该菜名不在菜谱库中，你可以自由发挥~</p>`;
-            } else {
-              body.innerHTML = `<p>还没设置这道菜，点击“修改”来添加吧</p>`;
+            const lines = cellContent.split('\n').filter(line => line.trim() !== '' && line.trim() !== '点击添加');
+            if (lines.length === 0) {
+              document.getElementById('modalBody').innerHTML = '<p>还没设置这道菜，点击“修改”来添加吧</p>';
+              document.getElementById('detailModal').style.display = 'flex';
+              return;
             }
-            modal.style.display = 'flex';
+            let html = '';
+            lines.forEach(name => {
+              const dish = dishes.find(d => d.name === name.trim());
+              if (dish) {
+                html += `<div style="margin-bottom:16px;background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,0.05)">
+                  <h3>${dish.name} <span style="font-size:12px;color:#888;">${dish.cuisine}</span></h3>
+                  <div class="ingredients">🛒 ${dish.ingredients}</div>
+                  <div class="steps">👨‍🍳 ${dish.steps.replace(/\n/g,'<br>')}</div>
+                </div>`;
+              } else if (name.trim() !== '暂无') {
+                html += `<p>「${name.trim()}」不在菜谱库中，你可以自由发挥~</p>`;
+              }
+            });
+            document.getElementById('modalBody').innerHTML = html || '<p>暂无详细信息</p>';
+            document.getElementById('detailModal').style.display = 'flex';
           }
         });
       });
@@ -621,13 +688,14 @@ const firebaseConfig = {
 
     document.getElementById('randomWeekBtn').addEventListener('click', () => {
       const menu = getWeekMenu();
-      const randomDish = (category) => {
-        const list = dishes.filter(d => d.category === category);
-        return list.length ? list[Math.floor(Math.random()*list.length)].name : '';
+      const randomFromCat = (cat) => {
+        const list = dishes.filter(d => d.category === cat);
+        return list.length ? list[Math.floor(Math.random()*list.length)].name : '暂无';
       };
       menu.forEach(item => {
-        if (item.lunch !== null) item.lunch = randomDish('荤');
-        item.dinner = randomDish('荤');
+        const combo = `${randomFromCat('荤')}\n${randomFromCat('素')}\n${randomFromCat('汤')}\n${randomFromCat('主食')}`;
+        if (item.lunch !== null) item.lunch = combo;
+        item.dinner = combo;
       });
       saveWeekMenu(menu);
       renderWeekTable();
@@ -653,16 +721,11 @@ const firebaseConfig = {
         e.target.classList.add('active');
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(e.target.dataset.view).classList.add('active');
-        if (e.target.dataset.view === 'weekView') {
-          renderWeekTable();
-        }
-        if (e.target.dataset.view === 'accountingView' && window.renderExpenseList) {
-          window.renderExpenseList();
-        }
+        if (e.target.dataset.view === 'weekView') renderWeekTable();
+        if (e.target.dataset.view === 'accountingView' && window.renderExpenseList) window.renderExpenseList();
       }
     });
 
-    // 初始化渲染
     renderDishes();
     renderMyMenu();
     renderWeekTable();
