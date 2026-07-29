@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>今晚吃什么 · 260+道菜 · 记账本</title>
+  <title>今晚吃什么 · 260+道菜 · 共享记账本</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -84,7 +84,7 @@
     .empty-menu { color: #aaa; text-align: center; padding: 20px; }
     .footer { margin-top: 30px; text-align: center; color: #aaa; font-size: 13px; }
 
-    /* 记账本 */
+    /* 共享记账本 */
     .accounting-inputs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
     .accounting-inputs input {
       flex: 1; min-width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 12px; font-size: 14px;
@@ -101,13 +101,13 @@
 <body>
   <div class="header">
     <h1>🍲 今晚吃什么</h1>
-    <p style="color:#777;">260+道菜 · 随机分享 · 记账本</p>
+    <p style="color:#777;">260+道菜 · 随机分享 · 共享记账本</p>
   </div>
 
   <!-- 主切换标签 -->
   <div class="main-tabs" id="mainTabs">
     <div class="main-tab active" data-view="menuView">🍽️ 菜单推荐</div>
-    <div class="main-tab" data-view="accountingView">💰 记账本</div>
+    <div class="main-tab" data-view="accountingView">💰 共享记账本</div>
   </div>
 
   <!-- 菜单推荐视图 -->
@@ -144,14 +144,14 @@
     </div>
   </div>
 
-  <!-- 记账本视图 -->
+<!-- 记账本视图（接入 Firebase） -->
   <div id="accountingView" class="view">
     <div class="accounting-section">
-      <div style="font-weight: 700; font-size: 18px; margin-bottom: 12px;">💰 买菜记账本</div>
+      <div style="font-weight: 700; font-size: 18px; margin-bottom: 12px;">💰 共享记账本 <span style="font-size:12px;color:green;">📶 实时同步中</span></div>
       <div class="accounting-inputs">
         <input type="date" id="expenseDate" />
         <input type="number" id="expenseAmount" placeholder="金额(元)" step="0.01" />
-        <input type="text" id="expenseNote" placeholder="买了啥(可选)" />
+        <input type="text" id="expenseNote" placeholder="买了啥" />
         <button id="addExpenseBtn">记一笔</button>
       </div>
       <div class="accounting-summary">
@@ -161,6 +161,27 @@
       <div id="expenseList" class="expense-list"></div>
     </div>
   </div>
+
+  <script type="module">
+    // ==================== 1. 填入你的 Firebase 配置 ====================
+    const firebaseConfig = {
+  apiKey: "AIzaSyBsa97YTtyGePUMfg0NJXsym1-7P6GOBDE",
+  authDomain: "dinner-helper-a8656.firebaseapp.com",
+  databaseURL: "https://dinner-helper-a8656-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "dinner-helper-a8656",
+  storageBucket: "dinner-helper-a8656.firebasestorage.app",
+  messagingSenderId: "628096196260",
+  appId: "1:628096196260:web:7eba9789baabfdb07b5031",
+  measurementId: "G-BJQ9L015XH"
+};
+
+    // ==================== 2. 初始化 Firebase ====================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const expensesRef = ref(db, 'expenses');
 
   <div class="footer">菜品持续更新 · 甜品专区 · 独立记账</div>
 
@@ -549,115 +570,97 @@
         });
       }
 
-      // ==================== 记账本功能 ====================
-      const STORAGE_KEY = 'dinner_expenses';
-      function getExpenses() {
-        const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
-      }
-      function saveExpenses(expenses) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
-      }
-      function addExpense(date, amount, note) {
-        const expenses = getExpenses();
-        expenses.push({ date, amount: parseFloat(amount), note, id: Date.now() });
-        saveExpenses(expenses);
-        renderExpenseList();
-      }
-      function deleteExpense(id) {
-        const expenses = getExpenses().filter(e => e.id !== id);
-        saveExpenses(expenses);
-        renderExpenseList();
-      }
-      function getTodayTotal(expenses) {
-        const today = new Date().toISOString().split('T')[0];
-        return expenses.filter(e => e.date === today).reduce((sum, e) => sum + e.amount, 0);
-      }
-      function getMonthTotal(expenses) {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2,'0');
-        const prefix = `${year}-${month}`;
-        return expenses.filter(e => e.date.startsWith(prefix)).reduce((sum, e) => sum + e.amount, 0);
-      }
-      function renderExpenseList() {
-        const expenses = getExpenses();
-        const todayTotal = getTodayTotal(expenses).toFixed(2);
-        const monthTotal = getMonthTotal(expenses).toFixed(2);
-        document.getElementById('todayTotal').textContent = todayTotal;
-        document.getElementById('monthTotal').textContent = monthTotal;
+    // ==================== 3. 共享记账逻辑 ====================
+    let allExpenses = [];
 
-        const listDiv = document.getElementById('expenseList');
-        if (expenses.length === 0) {
-          listDiv.innerHTML = '<div style="text-align:center;color:#aaa;padding:10px;">暂无记录，记一笔吧</div>';
-          return;
+    // 监听实时变化
+    onValue(expensesRef, (snapshot) => {
+      allExpenses = [];
+      snapshot.forEach(child => {
+        allExpenses.push({ id: child.key, ...child.val() });
+      });
+      // 保留半年内的记录，删除旧数据（可选）
+      const halfYearAgo = new Date();
+      halfYearAgo.setMonth(halfYearAgo.getMonth() - 6);
+      allExpenses.forEach(e => {
+        if (new Date(e.date) < halfYearAgo) {
+          remove(ref(db, 'expenses/' + e.id));
         }
-        const sorted = [...expenses].sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
-        listDiv.innerHTML = sorted.map(e => {
-          return `<div class="expense-item">
-            <span>${e.date} | ${e.note || '买菜'}</span>
-            <span><strong>¥${e.amount.toFixed(2)}</strong><span class="delete-expense" data-id="${e.id}">🗑️</span></span>
-          </div>`;
-        }).join('');
-        document.querySelectorAll('.delete-expense').forEach(el => {
-          el.addEventListener('click', function() {
-            const id = parseInt(this.dataset.id);
-            if (confirm('删除这条记录？')) deleteExpense(id);
-          });
+      });
+      renderExpenseList();
+    });
+
+    function addExpense(date, amount, note) {
+      if (!date || !amount || parseFloat(amount) <= 0) {
+        alert('请输入正确的日期和金额');
+        return;
+      }
+      push(expensesRef, {
+        date,
+        amount: parseFloat(amount),
+        note: note || '买菜',
+        timestamp: Date.now()
+      });
+      document.getElementById('expenseAmount').value = '';
+      document.getElementById('expenseNote').value = '';
+    }
+
+    function deleteExpense(id) {
+      if (confirm('删除这条记录？')) {
+        remove(ref(db, 'expenses/' + id));
+      }
+    }
+
+    function renderExpenseList() {
+      const today = new Date().toISOString().split('T')[0];
+      const todayExpenses = allExpenses.filter(e => e.date === today);
+      const todayTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2);
+      document.getElementById('todayTotal').textContent = todayTotal;
+
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2,'0');
+      const monthExpenses = allExpenses.filter(e => e.date && e.date.startsWith(`${year}-${month}`));
+      const monthTotal = monthExpenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2);
+      document.getElementById('monthTotal').textContent = monthTotal;
+
+      const listDiv = document.getElementById('expenseList');
+      if (allExpenses.length === 0) {
+        listDiv.innerHTML = '<div style="text-align:center;color:#aaa;padding:10px;">暂无记录，记一笔吧</div>';
+        return;
+      }
+      const sorted = [...allExpenses].sort((a,b) => b.timestamp - a.timestamp);
+      listDiv.innerHTML = sorted.map(e => {
+        return `<div class="expense-item">
+          <span>${e.date} | ${e.note}</span>
+          <span><strong>¥${e.amount.toFixed(2)}</strong> <span class="delete-expense" data-id="${e.id}">🗑️</span></span>
+        </div>`;
+      }).join('');
+      document.querySelectorAll('.delete-expense').forEach(el => {
+        el.addEventListener('click', function() {
+          deleteExpense(this.dataset.id);
         });
+      });
+    }
+
+    // ==================== 4. 绑定事件 ====================
+    document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('addExpenseBtn').addEventListener('click', () => {
+      const date = document.getElementById('expenseDate').value;
+      const amount = document.getElementById('expenseAmount').value;
+      const note = document.getElementById('expenseNote').value;
+      addExpense(date, amount, note);
+    });
+
+    // ==================== 视图切换 ====================
+    document.getElementById('mainTabs').addEventListener('click', function(e) {
+      if (e.target.classList.contains('main-tab')) {
+        document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(e.target.dataset.view).classList.add('active');
       }
-
-      // ==================== 事件绑定 ====================
-      document.getElementById('categoryTabs').addEventListener('click', function(e) {
-        if (e.target.classList.contains('tab-btn')) {
-          document.querySelectorAll('#categoryTabs .tab-btn').forEach(b => b.classList.remove('active'));
-          e.target.classList.add('active');
-          currentFilter = e.target.dataset.category;
-          renderDishes();
-        }
-      });
-
-      document.getElementById('randomDishBtn').addEventListener('click', randomMeal);
-      document.getElementById('shareMenuBtn').addEventListener('click', shareMenu);
-
-      document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
-      document.getElementById('addExpenseBtn').addEventListener('click', () => {
-        const date = document.getElementById('expenseDate').value;
-        const amount = document.getElementById('expenseAmount').value;
-        const note = document.getElementById('expenseNote').value;
-        if (!date || !amount || parseFloat(amount) <= 0) {
-          alert('请输入正确的日期和金额');
-          return;
-        }
-        addExpense(date, amount, note);
-        document.getElementById('expenseAmount').value = '';
-        document.getElementById('expenseNote').value = '';
-      });
-
-      // 加载分享的菜单
-      function loadSharedMenu() {
-        const hash = window.location.hash.slice(1);
-        if (hash.startsWith('menu=')) {
-          const ids = hash.replace('menu=', '').split(',').map(Number).filter(id => dishes.some(d => d.id === id));
-          if (ids.length > 0) {
-            selectedDishIds = new Set(ids);
-            renderDishes();
-            renderMyMenu();
-            document.querySelector('.my-menu-section').scrollIntoView({ behavior: 'smooth' });
-          }
-        }
-      }
-
-      window.addEventListener('load', () => {
-        loadSharedMenu();
-        renderExpenseList();
-      });
-      window.addEventListener('hashchange', loadSharedMenu);
-
-      // 初始渲染
-      renderDishes();
-      renderMyMenu();
-    })();
+    });
   </script>
 </body>
 </html>
