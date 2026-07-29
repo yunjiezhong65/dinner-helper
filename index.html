@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>今晚吃什么 · 菜单决策助手</title>
+  <title>今晚吃什么 · 全国热门菜谱</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -41,7 +41,7 @@
     .dish-name { font-size: 18px; font-weight: 700; }
     .badge {
       background: #e8e2d9; color: #5e4c3a; font-size: 12px; padding: 2px 10px;
-      border-radius: 20px; margin-right: 6px;
+      border-radius: 20px; margin-right: 6px; display: inline-block;
     }
     .badge.restaurant { background: #ffedcc; color: #a15813; }
     .ingredients { font-size: 13px; background: #f9f7f4; padding: 8px; border-radius: 12px; margin: 8px 0; }
@@ -78,6 +78,9 @@
     <button class="tab-btn" data-category="川菜">川菜</button>
     <button class="tab-btn" data-category="鄂菜">鄂菜</button>
     <button class="tab-btn" data-category="粤菜">粤菜</button>
+    <button class="tab-btn" data-category="东北菜">东北菜</button>
+    <button class="tab-btn" data-category="淮扬菜">淮扬菜</button>
+    <button class="tab-btn" data-category="闽菜">闽菜</button>
   </div>
   <div class="random-section">
     <button class="random-btn" id="randomDishBtn">🎲 随机一顿饭（荤+素+汤+主食）</button>
@@ -91,24 +94,102 @@
     </div>
     <div id="myMenuContent"><div class="empty-menu">还没选菜，从上面勾选喜欢的菜吧</div></div>
   </div>
-  <div class="footer">菜单灵感来自醉得意、兰湘子、笨萝卜等热门餐馆</div>
+  <div class="footer">菜单灵感来自醉得意、兰湘子、笨萝卜、夏式砂锅等全国热门餐馆</div>
 
   <script>
     (function() {
-      // 菜谱数据
+      // 丰盛菜谱库（30道，覆盖各地与热门餐馆）
       const dishes = [
-        { id:1, name:"辣椒炒肉", category:"荤", cuisine:"湘菜", restaurant:"兰湘子·笨萝卜风格", ingredients:["五花肉200g","青尖椒3个","蒜4瓣","豆豉1勺","生抽2勺","老抽半勺","盐","食用油"], steps:"1. 五花肉切薄片，青椒斜切圈，蒜拍碎。\n2. 锅不放油，下青椒煸出虎皮盛出。\n3. 热锅少油，下五花肉煸出油，加蒜、豆豉炒香。\n4. 淋入生抽、老抽翻炒上色，倒入青椒大火快炒，加盐出锅。" },
-        { id:2, name:"酸菜鱼", category:"荤", cuisine:"川菜", restaurant:"醉得意风格", ingredients:["草鱼片300g","酸菜200g","干辣椒5个","花椒","姜3片","蒜3瓣","蛋清1个","淀粉1勺","白胡椒粉","盐","白醋1勺"], steps:"1. 鱼片加盐、蛋清、淀粉抓匀腌制15分钟。\n2. 酸菜切段，干辣椒剪段。\n3. 热油爆香姜蒜，下酸菜炒干水分，加热水煮开，加白醋、盐、胡椒粉。\n4. 逐片下鱼片烫熟，盛出后放干辣椒花椒，淋热油。" },
-        { id:3, name:"砂锅排骨莲藕汤", category:"汤", cuisine:"鄂菜", restaurant:"夏式砂锅风格", ingredients:["排骨400g","莲藕1节","姜4片","料酒1勺","盐","葱花"], steps:"1. 排骨冷水下锅加料酒焯水。\n2. 莲藕去皮切滚刀块。\n3. 砂锅加水放排骨、姜片炖1小时，加莲藕再炖30分钟，加盐撒葱花。" },
-        { id:4, name:"手撕包菜", category:"素", cuisine:"湘菜", restaurant:"笨萝卜风格", ingredients:["包菜半颗","干辣椒3个","五花肉片50g","蒜2瓣","生抽1勺","陈醋1勺","盐"], steps:"1. 包菜手撕块，五花肉切片。\n2. 热锅少油煸五花肉出油，加蒜、干辣椒爆香。\n3. 倒包菜大火炒软，淋生抽、陈醋，加盐炒匀。" },
-        { id:5, name:"番茄炒蛋", category:"素", cuisine:"家常", restaurant:"家常经典", ingredients:["番茄2个","鸡蛋3个","葱花","盐","糖半勺","油"], steps:"1. 番茄切块，鸡蛋打散加盐。\n2. 热油炒鸡蛋凝固盛出。\n3. 余油炒番茄出汁加糖盐，倒回鸡蛋炒匀撒葱花。" },
-        { id:6, name:"白米饭", category:"主食", cuisine:"主食", restaurant:"基础主食", ingredients:["大米200g","水"], steps:"1. 大米淘洗，米水比例1:1.2，电饭煲煮熟。" },
-        { id:7, name:"葱油拌面", category:"主食", cuisine:"家常", restaurant:"上海风味", ingredients:["鲜面条150g","小葱1把","生抽2勺","老抽1勺","糖1勺","油"], steps:"1. 小葱切段，小火炸至焦黄捞出。\n2. 油中加生抽、老抽、糖搅匀。\n3. 面条煮熟过凉，拌入葱油，放炸葱。" },
-        { id:8, name:"白灼菜心", category:"素", cuisine:"粤菜", restaurant:"莱菜风格", ingredients:["菜心300g","蒜末","生抽2勺","蚝油1勺","油"], steps:"1. 菜心洗净，开水加油盐焯1分钟摆盘。\n2. 生抽蚝油加少许水淋上，撒蒜末，浇热油。" },
-        { id:9, name:"毛血旺", category:"荤", cuisine:"川菜", restaurant:"醉得意风格", ingredients:["鸭血1块","午餐肉半盒","毛肚100g","豆芽100g","干辣椒","花椒","火锅底料1块","蒜末","香菜"], steps:"1. 鸭血午餐肉切片，毛肚切块。\n2. 炒香火锅底料加水煮开，烫熟豆芽垫底。\n3. 下鸭血、午餐肉煮3分钟，最后下毛肚烫20秒，盛出撒蒜末、干辣椒花椒，泼热油放香菜。" },
-        { id:10, name:"干煸四季豆", category:"素", cuisine:"川菜", restaurant:"兰湘子风格", ingredients:["四季豆300g","猪肉末50g","芽菜1勺","干辣椒3个","花椒","生抽1勺","盐"], steps:"1. 四季豆去筋掰段，沥干。\n2. 油温六成炸至微皱捞出。\n3. 留底油炒肉末至酥，加干辣椒、花椒、芽菜，倒入四季豆，生抽盐炒匀。" },
-        { id:11, name:"冬瓜丸子汤", category:"汤", cuisine:"家常", restaurant:"家庭暖汤", ingredients:["冬瓜300g","猪肉馅200g","姜末","葱花","鸡蛋1个","淀粉1勺","盐","白胡椒粉"], steps:"1. 肉馅加姜末、鸡蛋、淀粉、盐搅上劲。\n2. 冬瓜切片。水烧开转小火挤丸子煮至浮起，下冬瓜煮透，加盐胡椒粉葱花。" },
-        { id:12, name:"蛋炒饭", category:"主食", cuisine:"家常", restaurant:"基础主食", ingredients:["隔夜米饭1碗","鸡蛋2个","胡萝卜丁","玉米粒","葱花","盐","油"], steps:"1. 鸡蛋炒碎盛出。\n2. 炒胡萝卜玉米粒，加米饭炒散，加鸡蛋、盐炒匀，撒葱花。" }
+        { id:1, name:"辣椒炒肉", category:"荤", cuisine:"湘菜", restaurant:"兰湘子·笨萝卜", 
+          ingredients:"五花肉200g、青尖椒3个、蒜4瓣、豆豉1勺、生抽2勺、老抽半勺、盐、食用油", 
+          steps:"1. 五花肉切薄片，青椒斜切圈，蒜拍碎。\n2. 锅不放油，下青椒煸出虎皮盛出。\n3. 热锅少油，下五花肉煸出油，加蒜、豆豉炒香。\n4. 淋入生抽、老抽翻炒上色，倒入青椒大火快炒，加盐出锅。" },
+        { id:2, name:"酸菜鱼", category:"荤", cuisine:"川菜", restaurant:"醉得意风格", 
+          ingredients:"草鱼片300g、酸菜200g、干辣椒5个、花椒、姜3片、蒜3瓣、蛋清1个、淀粉1勺、白胡椒粉、盐、白醋1勺", 
+          steps:"1. 鱼片加盐、蛋清、淀粉抓匀腌制15分钟。\n2. 酸菜切段，干辣椒剪段。\n3. 热油爆香姜蒜，下酸菜炒干水分，加热水煮开，加白醋、盐、胡椒粉。\n4. 逐片下鱼片烫熟，盛出后放干辣椒花椒，淋热油。" },
+        { id:3, name:"砂锅排骨莲藕汤", category:"汤", cuisine:"鄂菜", restaurant:"夏式砂锅", 
+          ingredients:"排骨400g、莲藕1节、姜4片、料酒1勺、盐、葱花", 
+          steps:"1. 排骨冷水下锅加料酒焯水。\n2. 莲藕去皮切滚刀块。\n3. 砂锅加水放排骨、姜片炖1小时，加莲藕再炖30分钟，加盐撒葱花。" },
+        { id:4, name:"手撕包菜", category:"素", cuisine:"湘菜", restaurant:"笨萝卜风格", 
+          ingredients:"包菜半颗、干辣椒3个、五花肉片50g、蒜2瓣、生抽1勺、陈醋1勺、盐", 
+          steps:"1. 包菜手撕块，五花肉切片。\n2. 热锅少油煸五花肉出油，加蒜、干辣椒爆香。\n3. 倒包菜大火炒软，淋生抽、陈醋，加盐炒匀。" },
+        { id:5, name:"番茄炒蛋", category:"素", cuisine:"家常", restaurant:"家常经典", 
+          ingredients:"番茄2个、鸡蛋3个、葱花、盐、糖半勺、油", 
+          steps:"1. 番茄切块，鸡蛋打散加盐。\n2. 热油炒鸡蛋凝固盛出。\n3. 余油炒番茄出汁加糖盐，倒回鸡蛋炒匀撒葱花。" },
+        { id:6, name:"白米饭", category:"主食", cuisine:"主食", restaurant:"基础主食", 
+          ingredients:"大米200g、水", 
+          steps:"1. 大米淘洗，米水比例1:1.2，电饭煲煮熟。" },
+        { id:7, name:"葱油拌面", category:"主食", cuisine:"家常", restaurant:"上海风味", 
+          ingredients:"鲜面条150g、小葱1把、生抽2勺、老抽1勺、糖1勺、油", 
+          steps:"1. 小葱切段，小火炸至焦黄捞出。\n2. 油中加生抽、老抽、糖搅匀。\n3. 面条煮熟过凉，拌入葱油，放炸葱。" },
+        { id:8, name:"白灼菜心", category:"素", cuisine:"粤菜", restaurant:"莱菜风格", 
+          ingredients:"菜心300g、蒜末、生抽2勺、蚝油1勺、油", 
+          steps:"1. 菜心洗净，开水加油盐焯1分钟摆盘。\n2. 生抽蚝油加少许水淋上，撒蒜末，浇热油。" },
+        { id:9, name:"毛血旺", category:"荤", cuisine:"川菜", restaurant:"醉得意", 
+          ingredients:"鸭血1块、午餐肉半盒、毛肚100g、豆芽100g、干辣椒、花椒、火锅底料1块、蒜末、香菜", 
+          steps:"1. 鸭血午餐肉切片，毛肚切块。\n2. 炒香火锅底料加水煮开，烫熟豆芽垫底。\n3. 下鸭血、午餐肉煮3分钟，最后下毛肚烫20秒，盛出撒蒜末、干辣椒花椒，泼热油放香菜。" },
+        { id:10, name:"干煸四季豆", category:"素", cuisine:"川菜", restaurant:"兰湘子风格", 
+          ingredients:"四季豆300g、猪肉末50g、芽菜1勺、干辣椒3个、花椒、生抽1勺、盐", 
+          steps:"1. 四季豆去筋掰段，沥干。\n2. 油温六成炸至微皱捞出。\n3. 留底油炒肉末至酥，加干辣椒、花椒、芽菜，倒入四季豆，生抽盐炒匀。" },
+        { id:11, name:"冬瓜丸子汤", category:"汤", cuisine:"家常", restaurant:"家庭暖汤", 
+          ingredients:"冬瓜300g、猪肉馅200g、姜末、葱花、鸡蛋1个、淀粉1勺、盐、白胡椒粉", 
+          steps:"1. 肉馅加姜末、鸡蛋、淀粉、盐搅上劲。\n2. 冬瓜切片。水烧开转小火挤丸子煮至浮起，下冬瓜煮透，加盐胡椒粉葱花。" },
+        { id:12, name:"蛋炒饭", category:"主食", cuisine:"家常", restaurant:"基础主食", 
+          ingredients:"隔夜米饭1碗、鸡蛋2个、胡萝卜丁、玉米粒、葱花、盐、油", 
+          steps:"1. 鸡蛋炒碎盛出。\n2. 炒胡萝卜玉米粒，加米饭炒散，加鸡蛋、盐炒匀，撒葱花。" },
+        { id:13, name:"小炒黄牛肉", category:"荤", cuisine:"湘菜", restaurant:"兰湘子招牌", 
+          ingredients:"黄牛肉250g、香菜、小米辣5个、泡椒3个、姜蒜、生抽2勺、蚝油1勺、淀粉1勺、盐、油", 
+          steps:"1. 牛肉逆纹切薄片，加生抽、蚝油、淀粉抓匀腌制10分钟。\n2. 热油滑炒牛肉至变色盛出。\n3. 爆香姜蒜、泡椒、小米辣，倒回牛肉，加香菜、盐大火翻炒10秒出锅。" },
+        { id:14, name:"糖醋里脊", category:"荤", cuisine:"鲁菜", restaurant:"经典鲁菜", 
+          ingredients:"猪里脊300g、鸡蛋1个、淀粉、番茄酱3勺、白醋2勺、糖2勺、盐、料酒", 
+          steps:"1. 里脊切条，加盐、料酒腌15分钟，裹蛋液和淀粉。\n2. 六成油温炸至金黄捞出，复炸更酥。\n3. 锅中加番茄酱、白醋、糖、少许水煮至浓稠，倒入里脊快速裹匀。" },
+        { id:15, name:"锅包肉", category:"荤", cuisine:"东北菜", restaurant:"东北名菜", 
+          ingredients:"猪里脊300g、胡萝卜丝、香菜、葱姜、土豆淀粉200g、白醋3勺、糖3勺、盐、料酒", 
+          steps:"1. 里脊切片，加料酒盐腌底味，土豆淀粉加水沉淀后裹浆。\n2. 油温七成炸至微黄捞出，复炸至金黄。\n3. 白醋、糖、少许盐调汁。锅留底油，下葱姜胡萝卜丝，烹入糖醋汁，倒入里脊片翻匀，放香菜。" },
+        { id:16, name:"酸辣土豆丝", category:"素", cuisine:"川菜", restaurant:"家常下饭", 
+          ingredients:"土豆2个、干辣椒3个、花椒、蒜2瓣、白醋2勺、盐、油", 
+          steps:"1. 土豆去皮切细丝，泡水去淀粉后沥干。\n2. 热油爆香花椒、干辣椒、蒜末，下土豆丝大火翻炒。\n3. 淋入白醋，加盐炒至断生，保持脆爽出锅。" },
+        { id:17, name:"糖醋排骨", category:"荤", cuisine:"淮扬菜", restaurant:"宴客硬菜", 
+          ingredients:"肋排500g、冰糖3勺、醋3勺、生抽2勺、老抽1勺、料酒、姜3片、芝麻", 
+          steps:"1. 排骨冷水下锅加料酒焯水。\n2. 热锅少油，下冰糖小火炒至琥珀色，倒入排骨炒上色。\n3. 加姜片、生抽、老抽、醋、没过排骨的热水，小火焖30分钟，大火收汁，撒芝麻。" },
+        { id:18, name:"麻婆豆腐", category:"荤", cuisine:"川菜", restaurant:"醉得意经典", 
+          ingredients:"嫩豆腐1块、牛肉末50g、豆瓣酱1大勺、豆豉、蒜末、姜末、辣椒粉、花椒粉、水淀粉、葱花", 
+          steps:"1. 豆腐切2cm块，盐水焯烫备用。\n2. 炒香牛肉末至酥，加豆瓣酱、豆豉、姜蒜末、辣椒粉炒出红油。\n3. 加适量水煮开，放入豆腐，小火煮3分钟入味，水淀粉勾芡，撒花椒粉、葱花。" },
+        { id:19, name:"酸菜炒粉皮", category:"素", cuisine:"湘菜", restaurant:"笨萝卜招牌", 
+          ingredients:"红薯粉皮200g、酸菜100g、干辣椒3个、蒜末、生抽1勺、老抽半勺、盐、油", 
+          steps:"1. 粉皮温水泡软切条，酸菜切碎。\n2. 热油爆香蒜末、干辣椒，下酸菜炒干水分。\n3. 加入粉皮翻炒，加生抽、老抽、盐调味，炒至粉皮透明油亮。" },
+        { id:20, name:"红烧武昌鱼", category:"荤", cuisine:"鄂菜", restaurant:"莱菜风格", 
+          ingredients:"武昌鱼1条（约500g）、姜丝、蒜瓣、葱段、豆瓣酱1勺、生抽2勺、老抽1勺、糖1勺、料酒、盐", 
+          steps:"1. 鱼处理干净，两面划刀，用盐、料酒腌10分钟。\n2. 热油煎鱼至两面金黄盛出。\n3. 余油下姜蒜、豆瓣酱炒香，加鱼、生抽、老抽、糖、热水，中小火焖8分钟，收汁撒葱段。" },
+        { id:21, name:"佛跳墙", category:"汤", cuisine:"闽菜", restaurant:"福建名菜", 
+          ingredients:"鲍鱼2个、海参1条、鱼翅/粉丝适量、干贝、花菇、猪蹄筋、鸡肉、高汤、料酒、姜片、盐", 
+          steps:"1. 所有干货提前泡发。\n2. 鸡肉和猪蹄筋焯水。\n3. 炖盅内依次放入姜片、鸡肉、蹄筋、花菇、干贝、鲍鱼、海参，加入高汤和料酒，密封炖煮2小时，加盐调味。" },
+        { id:22, name:"地三鲜", category:"素", cuisine:"东北菜", restaurant:"东北家常", 
+          ingredients:"土豆1个、茄子1个、青椒1个、蒜末、生抽2勺、老抽半勺、糖1勺、淀粉、盐、油", 
+          steps:"1. 土豆、茄子、青椒切滚刀块。土豆茄子油炸至金黄，青椒过油。\n2. 碗汁：生抽、老抽、糖、盐、淀粉、水搅匀。\n3. 锅留底油爆香蒜末，倒入三鲜，淋碗汁快速炒匀。" },
+        { id:23, name:"蟹黄豆腐", category:"素", cuisine:"淮扬菜", restaurant:"精致宴客", 
+          ingredients:"内酯豆腐1盒、咸蛋黄3个、蟹肉棒2根、姜末、高汤、水淀粉、盐", 
+          steps:"1. 豆腐切块焯水，咸蛋黄碾碎，蟹肉棒撕丝。\n2. 热油炒咸蛋黄起沙，加姜末、蟹肉丝略炒。\n3. 加入高汤和豆腐，小火煮2分钟，盐调味，水淀粉勾芡。" },
+        { id:24, name:"清蒸鲈鱼", category:"荤", cuisine:"粤菜", restaurant:"粤式经典", 
+          ingredients:"鲈鱼1条、姜丝、葱丝、红椒丝、蒸鱼豉油3勺、料酒、盐、油", 
+          steps:"1. 鱼洗净，两面划刀，抹盐料酒，鱼身下垫姜片，上锅蒸8-10分钟。\n2. 倒掉盘中汤汁，铺上葱姜红椒丝。\n3. 淋蒸鱼豉油，浇一勺热油激香。" },
+        { id:25, name:"凉拌黄瓜", category:"素", cuisine:"家常", restaurant:"快手凉菜", 
+          ingredients:"黄瓜2根、蒜末、生抽2勺、香醋2勺、糖1勺、盐、香油、辣椒油", 
+          steps:"1. 黄瓜拍碎切段。\n2. 所有调料混合均匀，淋在黄瓜上拌匀，腌制10分钟更入味。" },
+        { id:26, name:"紫菜蛋花汤", category:"汤", cuisine:"家常", restaurant:"简易汤品", 
+          ingredients:"干紫菜5g、鸡蛋2个、虾皮、葱花、盐、香油", 
+          steps:"1. 紫菜撕碎，鸡蛋打散。\n2. 水烧开加虾皮，转小火淋入蛋液成蛋花。\n3. 放入紫菜、盐、香油，撒葱花即可。" },
+        { id:27, name:"玉米排骨汤", category:"汤", cuisine:"鄂菜", restaurant:"夏式砂锅", 
+          ingredients:"排骨400g、甜玉米2根、胡萝卜1根、姜3片、盐、料酒", 
+          steps:"1. 排骨焯水，玉米胡萝卜切段。\n2. 所有材料放入砂锅，加水、姜片、料酒，大火烧开转小火炖1.5小时，加盐调味。" },
+        { id:28, name:"炸酱面", category:"主食", cuisine:"家常", restaurant:"老北京风味", 
+          ingredients:"鲜面条150g、猪肉末100g、黄豆酱3勺、甜面酱2勺、黄瓜丝、豆芽、葱花、姜末、糖、油", 
+          steps:"1. 热油煸炒猪肉末至变色，加姜末、料酒去腥。\n2. 加入黄豆酱、甜面酱、糖，小火炸香至油酱分离。\n3. 面条煮熟过凉，铺上黄瓜丝、焯水豆芽，浇上炸酱，撒葱花。" },
+        { id:29, name:"干炒牛河", category:"主食", cuisine:"粤菜", restaurant:"粤式经典", 
+          ingredients:"河粉300g、牛肉片100g、豆芽、洋葱丝、葱段、生抽2勺、老抽1勺、蚝油1勺、盐、淀粉", 
+          steps:"1. 牛肉加生抽、淀粉腌10分钟，滑油至变色。\n2. 热油炒洋葱、豆芽，倒入河粉大火翻炒，加生抽、老抽、蚝油。\n3. 加入牛肉、葱段，快速炒匀上色。" },
+        { id:30, name:"金钱蛋", category:"荤", cuisine:"湘菜", restaurant:"笨萝卜特色", 
+          ingredients:"鸡蛋5个、青红椒各2个、蒜末、豆豉、生抽1勺、老抽半勺、盐、油", 
+          steps:"1. 鸡蛋煮熟剥壳，切厚片。\n2. 热油煎蛋片至两面金黄盛出。\n3. 余油爆香蒜末、豆豉、青红椒圈，倒入蛋片，加生抽、老抽、盐轻轻翻匀。" }
       ];
 
       let currentFilter = 'all';
@@ -134,7 +215,7 @@
               <span class="badge">${dish.cuisine}</span>
               <span class="badge restaurant">${dish.restaurant}</span>
             </div>
-            <div class="ingredients">🛒 <strong>食材：</strong>${dish.ingredients.join('、')}</div>
+            <div class="ingredients">🛒 <strong>食材：</strong>${dish.ingredients}</div>
             <div class="steps">👨‍🍳 <strong>步骤：</strong><br>${dish.steps}</div>
             <button class="select-btn ${selected ? 'selected-btn' : ''}" data-id="${dish.id}">
               ${selected ? '✓ 已点' : '＋ 点这道菜'}
@@ -166,7 +247,7 @@
         selected.forEach(d => html += `<li style="padding:4px 0;">🍽️ ${d.name} <span style="color:#888;">(${d.cuisine})</span></li>`);
         html += '</ul>';
         const allIng = new Set();
-        selected.forEach(d => d.ingredients.forEach(i => allIng.add(i)));
+        selected.forEach(d => d.ingredients.split('、').forEach(i => allIng.add(i.trim())));
         html += `<div style="background:#f4f0eb;padding:10px;border-radius:14px;margin-top:8px;">🛒 <strong>统一采购：</strong>${Array.from(allIng).join('、')}</div>`;
         myMenuContent.innerHTML = html;
       }
@@ -189,16 +270,38 @@
         const selected = dishes.filter(d => selectedDishIds.has(d.id));
         let text = '🍽️ 今晚菜单来啦！\n\n';
         selected.forEach(d => {
-          text += `【${d.name}】${d.cuisine}\n食材：${d.ingredients.join('、')}\n做法：${d.steps.replace(/\n/g,'；')}\n\n`;
+          text += `【${d.name}】${d.cuisine}\n食材：${d.ingredients}\n做法：${d.steps.replace(/\n/g,'；')}\n\n`;
         });
         const allIng = new Set();
-        selected.forEach(d => d.ingredients.forEach(i => allIng.add(i)));
+        selected.forEach(d => d.ingredients.split('、').forEach(i => allIng.add(i.trim())));
         text += `🛒 统一采购：${Array.from(allIng).join('、')}`;
+        
+        // 生成可分享的链接（带点菜参数）
+        const ids = Array.from(selectedDishIds).join(',');
+        const shareLink = window.location.origin + window.location.pathname + '#menu=' + ids;
+        text += `\n\n📎 点击查看完整菜单：${shareLink}`;
+
         if (navigator.share) {
-          navigator.share({ title: '今晚吃什么', text: text }).catch(() => {});
+          navigator.share({ title: '今晚吃什么', text: text }).catch(() => {
+            copyToClipboard(text);
+          });
         } else {
-          navigator.clipboard.writeText(text).then(() => alert('菜单已复制到剪贴板，去粘贴给女朋友吧！')).catch(() => alert('分享失败，请手动复制'));
+          copyToClipboard(text);
         }
+      }
+
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert('菜单已复制到剪贴板，可以直接发给女朋友啦！');
+        }).catch(() => {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          alert('菜单已复制，请粘贴分享');
+        });
       }
 
       // 分类切换
@@ -213,6 +316,23 @@
 
       document.getElementById('randomDishBtn').addEventListener('click', randomMeal);
       document.getElementById('shareMenuBtn').addEventListener('click', shareMenu);
+
+      // 加载分享的菜单（从 hash 参数读取）
+      function loadSharedMenu() {
+        const hash = window.location.hash.slice(1);
+        if (hash.startsWith('menu=')) {
+          const ids = hash.replace('menu=', '').split(',').map(Number).filter(id => dishes.some(d => d.id === id));
+          if (ids.length > 0) {
+            selectedDishIds = new Set(ids);
+            renderDishes();
+            renderMyMenu();
+            document.querySelector('.my-menu-section').scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      }
+
+      window.addEventListener('load', loadSharedMenu);
+      window.addEventListener('hashchange', loadSharedMenu);
 
       // 初始渲染
       renderDishes();
